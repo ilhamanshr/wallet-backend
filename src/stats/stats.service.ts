@@ -1,12 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 
+import { TopTransactionDto } from './dto/top-transactions.dto';
+import { TopUserDto } from './dto/top-users.dto';
 import { StatsRepository } from './stats.repository';
-
-export interface TopTransactionDto {
-  username: string;
-  amount: Prisma.Decimal;
-}
 
 @Injectable()
 export class StatsService {
@@ -29,5 +25,12 @@ export class StatsService {
       const signedAmount = isDebit ? row.amount.negated() : row.amount;
       return { username: counterpartyUsername, amount: signedAmount };
     });
+  }
+
+  /**
+   * Top 10 users by aggregate outbound transfer value (debits).
+   */
+  topUsersByDebit(): Promise<TopUserDto[]> {
+    return this.stats.topUsersByDebit();
   }
 }

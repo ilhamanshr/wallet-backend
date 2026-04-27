@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Transaction, TransactionType } from '@prisma/client';
+import { Prisma, Transaction, TransactionType } from '@prisma/client';
 
 import { PrismaService } from 'src/prisma/prisma.service';
 
@@ -9,6 +9,11 @@ export type TopTransactionRow = Transaction & {
   fromUser: { username: string } | null;
   toUser: { username: string };
 };
+
+export interface TopUserRow {
+  username: string;
+  transacted_value: Prisma.Decimal;
+}
 
 @Injectable()
 export class StatsRepository {
@@ -32,5 +37,26 @@ export class StatsRepository {
         toUser: { select: { username: true } },
       },
     });
+  }
+
+  /**
+   * Top 10 users by total OUTBOUND transfer value (debits).
+   *
+   * LEFT JOIN so users with zero debits still appear when the system has
+   * fewer than 10 active senders — matches the spec example showing a
+   * user with `transacted_value: 0`.
+   */
+  topUsersByDebit(): Promise<TopUserRow[]> {
+    return this.prisma.$queryRaw<TopUserRow[]>(Prisma.sql`
+      SELECT u.username,
+             COALESCE(SUM(t.amount), 0)::numeric AS transacted_value
+      FROM "users" u
+      LEFT JOIN "transactions" t
+        ON t."fromUserId" = u.id
+       AND t.type = 'TRANSFER'
+      GROUP BY u.id, u.username
+      ORDER BY transacted_value DESC, u.username ASC
+      LIMIT ${TOP_LIMIT}
+    `);
   }
 }
