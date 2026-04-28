@@ -36,4 +36,4 @@ COPY --from=builder /app/dist ./dist
 EXPOSE 3000
 
 # Apply migrations on container start, then launch the API.
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]
+CMD ["node", "dist/main.js"]
