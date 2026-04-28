@@ -30,7 +30,7 @@ async function bootstrap(): Promise<void> {
   const config = app.get(ConfigService);
   const port = config.getOrThrow<number>('port');
 
-  await app.listen(port, '0.0.0.0');
+  await app.listen(port);
   Logger.log(`Wallet API listening on :${port}`, 'Bootstrap');
 }
 
