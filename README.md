@@ -1,5 +1,8 @@
 # Insignia Crypto Wallet — Backend
 
+[![test](https://github.com/ilhamanshr/wallet-backend/actions/workflows/test.yml/badge.svg)](https://github.com/ilhamanshr/wallet-backend/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/ilhamanshr/wallet-backend/branch/main/graph/badge.svg)](https://codecov.io/gh/ilhamanshr/wallet-backend)
+
 Production-grade backend for the **Insignia offline assignment**: a simple
 crypto-wallet REST API built with **NestJS**, **Prisma**, and
 **PostgreSQL**.
