@@ -11,6 +11,11 @@ async function bootstrap(): Promise<void> {
     logger: ['error', 'warn', 'log'],
   });
 
+  // Disable ETags — Express generates them by default and returns 304 when
+  // the response body hasn't changed. For a wallet API, clients must always
+  // receive the current balance, not a cached copy.
+  app.getHttpAdapter().getInstance().set('etag', false);
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
