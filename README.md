@@ -4,7 +4,7 @@ Production-grade backend for the **Insignia offline assignment**: a simple
 crypto-wallet REST API built with **NestJS**, **Prisma**, and
 **PostgreSQL**.
 
-> **Live URL** _(filled in after Railway deploy)_: `https://<your-app>.up.railway.app`
+> **Live URL**: https://wallet-backend-production-c875.up.railway.app
 >
 > Spec: `Assignment.yml` (the OpenAPI 3.1 file shipped with the assignment).
 
@@ -222,7 +222,7 @@ Topups (`DEPOSIT`) and transfers (`TRANSFER`) live in the same table with a `typ
 4. Add a **Postgres** plugin; Railway will inject `DATABASE_URL` automatically.
 5. Add an env var: `JWT_SECRET=<a long random string>`.
 6. Deploy. The container's `CMD` runs `prisma migrate deploy` then starts the API.
-7. Open the generated `*.up.railway.app` URL — `GET /health` should return `{"status":"ok"}`.
+7. Open the generated URL — `GET /health` should return `{"status":"ok"}`. Live at: https://wallet-backend-production-c875.up.railway.app
 8. Paste the URL into the top of this README under **Live URL**.
 
 ---
