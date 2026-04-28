@@ -41,7 +41,9 @@ crypto-wallet REST API built with **NestJS**, **Prisma**, and
 │   ├── users/                        # POST /user
 │   ├── wallets/                      # GET /balance, POST /topup
 │   ├── transfers/                    # POST /transfer
-│   ├── stats/                        # GET /top_transactions_per_user, /top_users
+│   ├── stats/
+│   │   ├── dto/                      # response shapes (TopTransactionDto, TopUserDto)
+│   │   └── ...                       # GET /top_transactions_per_user, /top_users
 │   └── health/                       # GET /health (deploy probe)
 ├── test/
 │   ├── setup.ts                      # boots the real Nest app for e2e
@@ -209,6 +211,20 @@ Two reasons:
 
 1. **Tests** — services are pure business logic, easy to mock.
 2. **Containment** — Prisma's surface area stops at the repo. If we ever swap ORM, only `*.repository.ts` files change.
+
+### Why ETags are disabled
+
+Express generates `ETag` headers by default and returns `304 Not Modified` when the response body is unchanged between requests. For a wallet API this is **incorrect behaviour** — a client that cached a balance of 0 would keep seeing 0 even after a topup until it forces a fresh request. We disable ETags globally in `main.ts`:
+
+```ts
+app.getHttpAdapter().getInstance().set('etag', false);
+```
+
+Every response always returns `200` with the current value.
+
+### Port binding (`::` not `0.0.0.0`)
+
+The server binds to `::` (Node's default when no hostname is passed to `app.listen`), which covers **both IPv4 and IPv6**. This is required for Railway's private networking — services communicate over `*.railway.internal` using IPv6 addresses. If you only bind to `0.0.0.0` (IPv4), internal service calls will silently fail.
 
 ### Schema choice: one Transaction table
 
