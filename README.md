@@ -24,6 +24,7 @@ crypto-wallet REST API built with **NestJS**, **Prisma**, and
 - **Global validation, error filter, and Decimal serializer** — DTOs are validated by `class-validator`; one filter normalizes every error response shape and translates Prisma uniqueness errors into 409.
 - **Tests** — Jest unit suites for every service plus a Supertest e2e suite that runs the entire API against a real Postgres, including a concurrent-transfer no-double-spend test.
 - **Deploy-ready** — multi-stage `Dockerfile` (node:20-slim + OpenSSL); `railway.json` uses `preDeployCommand` for migrations so the healthcheck only fires once the app is fully live.
+- **Interactive API docs** — Swagger UI at `/docs` with JWT bearer auth support and live "Try it" for every endpoint.
 
 ---
 
@@ -54,8 +55,10 @@ crypto-wallet REST API built with **NestJS**, **Prisma**, and
 │   ├── setup.ts                      # boots the real Nest app for e2e
 │   ├── wallet.e2e-spec.ts            # full-stack e2e against Postgres
 │   └── jest-e2e.json
+├── .github/
+│   └── workflows/test.yml            # CI: unit + e2e on every push to main
 ├── docker-compose.yml                # local Postgres
-├── Dockerfile                        # multi-stage prod build
+├── Dockerfile                        # multi-stage prod build (node:20-slim)
 ├── railway.json                      # Railway one-click config
 ├── .env.example
 └── package.json
@@ -182,7 +185,7 @@ npx prisma migrate deploy
 npm run test:e2e
 ```
 
-The e2e suite covers every endpoint, every error path, **and a concurrent-transfer test** that fires two competing transfers via `Promise.all` and asserts the wallet never goes negative.
+23 tests covering every endpoint, every error path, **and a concurrent-transfer test** that fires two competing transfers via `Promise.all` and asserts the wallet never goes negative.
 
 ---
 
@@ -247,7 +250,7 @@ Topups (`DEPOSIT`) and transfers (`TRANSFER`) live in the same table with a `typ
 5. Add an env var: `JWT_SECRET=<a long random string>`.
 6. Deploy. Railway runs `preDeployCommand` (migrations) first, then starts the container with `node dist/main.js`.
 7. Open the generated URL — `GET /health` should return `{"status":"ok"}`. Live at: https://wallet-backend-production-c875.up.railway.app
-8. Paste the URL into the top of this README under **Live URL**.
+8. Browse the interactive API docs at `<your-url>/docs`.
 
 ---
 
