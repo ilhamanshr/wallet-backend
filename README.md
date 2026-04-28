@@ -9,6 +9,8 @@ crypto-wallet REST API built with **NestJS**, **Prisma**, and
 
 > **Live URL**: https://wallet-backend-production-c875.up.railway.app
 >
+> **Swagger UI**: https://wallet-backend-production-c875.up.railway.app/docs
+>
 > Spec: `Assignment.yml` (the OpenAPI 3.1 file shipped with the assignment).
 
 ---
@@ -145,6 +147,7 @@ All endpoints obey the supplied `Assignment.yml` exactly.
 | GET    | `/top_transactions_per_user` |  ✅  | 200 / 401  | [`stats.controller.ts`](src/stats/stats.controller.ts) |
 | GET    | `/top_users`                 |  ✅  | 200 / 401  | [`stats.controller.ts`](src/stats/stats.controller.ts) |
 | GET    | `/health`                    |  ❌  | 200        | [`health.controller.ts`](src/health/health.controller.ts) |
+| GET    | `/docs`                      |  ❌  | 200        | Swagger UI (interactive API explorer) |
 
 ### Authentication
 
