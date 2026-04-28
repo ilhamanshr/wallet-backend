@@ -18,7 +18,7 @@ crypto-wallet REST API built with **NestJS**, **Prisma**, and
 - **JWT auth** — accepts both raw (`Authorization: <token>`, per spec) and `Bearer` formats.
 - **Global validation, error filter, and Decimal serializer** — DTOs are validated by `class-validator`; one filter normalizes every error response shape and translates Prisma uniqueness errors into 409.
 - **Tests** — Jest unit suites for every service plus a Supertest e2e suite that runs the entire API against a real Postgres, including a concurrent-transfer no-double-spend test.
-- **Deploy-ready** — multi-stage `Dockerfile` runs `prisma migrate deploy` on start; `railway.json` ships a one-click Railway profile.
+- **Deploy-ready** — multi-stage `Dockerfile` (node:20-slim + OpenSSL); `railway.json` uses `preDeployCommand` for migrations so the healthcheck only fires once the app is fully live.
 
 ---
 
@@ -156,13 +156,15 @@ npm test
 npm run test:cov   # with coverage report
 ```
 
-Covers each service:
+42 tests across 7 files:
 
 - [`users.service.spec.ts`](src/users/users.service.spec.ts) — register happy path, P2002 → 409, error rethrows.
-- [`wallets.service.spec.ts`](src/wallets/wallets.service.spec.ts) — balance read, topup increments + writes DEPOSIT, locks wallet, runs in Serializable.
-- [`transfers.service.spec.ts`](src/transfers/transfers.service.spec.ts) — happy path, 404 missing recipient, 400 self-transfer, 400 insufficient, decimal precision retained.
-- [`stats.service.spec.ts`](src/stats/stats.service.spec.ts) — debit sign flip, counterparty mapping, empty list, top-users with zero-debit users included.
+- [`wallets.service.spec.ts`](src/wallets/wallets.service.spec.ts) — balance read, topup debit + DEPOSIT row, 8-dp truncation, sub-precision rejection, `>= 10_000_000` strict rejection.
+- [`transfers.service.spec.ts`](src/transfers/transfers.service.spec.ts) — happy path, 404 missing recipient, 400 self-transfer, 400 insufficient, full-balance boundary, 8-dp truncation, decimal precision retained.
+- [`stats.service.spec.ts`](src/stats/stats.service.spec.ts) — debit sign flip, counterparty mapping, empty list, ordering preserved, top-users pass-through + empty + order.
 - [`auth/jwt.strategy.spec.ts`](src/auth/jwt.strategy.spec.ts) — raw + Bearer header parsing, missing user → 401.
+- [`common/filters/all-exceptions.filter.spec.ts`](src/common/filters/all-exceptions.filter.spec.ts) — HttpException pass-through, Prisma P2002 → 409, unknown error → 500 (no message leak), other Prisma codes → 500.
+- [`common/interceptors/decimal-serializer.interceptor.spec.ts`](src/common/interceptors/decimal-serializer.interceptor.spec.ts) — top-level + nested + array Decimal → number, null/undefined preserved, primitives pass-through.
 
 ### End-to-end (real Postgres)
 
@@ -221,7 +223,7 @@ Topups (`DEPOSIT`) and transfers (`TRANSFER`) live in the same table with a `typ
 3. Railway auto-detects `Dockerfile` and `railway.json`.
 4. Add a **Postgres** plugin; Railway will inject `DATABASE_URL` automatically.
 5. Add an env var: `JWT_SECRET=<a long random string>`.
-6. Deploy. The container's `CMD` runs `prisma migrate deploy` then starts the API.
+6. Deploy. Railway runs `preDeployCommand` (migrations) first, then starts the container with `node dist/main.js`.
 7. Open the generated URL — `GET /health` should return `{"status":"ok"}`. Live at: https://wallet-backend-production-c875.up.railway.app
 8. Paste the URL into the top of this README under **Live URL**.
 
